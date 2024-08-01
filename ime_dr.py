@@ -12,6 +12,9 @@ divider = "*-" * 20
 
 def drExercise():
     ''' Main function for DR exercise. Checks for csv file, loads into memory and pings/ftp checks portals. '''
+
+    timeStamp = datetime.datetime.now().strftime('%Y-%m-%d @ %X')
+    print(f"DR exercise started on {timeStamp}")
     # In future, implement output to file.
     # timeStamp = datetime.datetime.now().strftime('%Y%m%d-%X')
     # destfile = f'DR_exercise_{timeStamp}'
@@ -22,14 +25,15 @@ def drExercise():
     else:
         print('Source CSV file found, loading...')
         sleep(0.5)
-        portals = loadCsv(sourceFile)
+        portals = loadCsv(sourceFile) # Load portals from csv file
         print(f"\nPortals loaded: {len(portals)}")
         
-        for portal in portals:
+        for portal in portals: # Ping portals 1 by 1
             pingPortal(portal)
             pass # Implement ftp connection check
-
-    print(f"\n{divider}\nDR Exercise finished.\n")
+    
+    timeStamp = datetime.datetime.now().strftime('%Y-%m-%d @ %X')
+    print(f"\n{divider}\nDR Exercise finished on {timeStamp}.\n")
 
 
 def loadCsv(sourceFile):
@@ -48,16 +52,14 @@ def loadCsv(sourceFile):
                 portals.append(portal)
                 print("\rPortals imported: {}". format(counter), end='')
                 sleep(.025)
-        # print("")
     return portals
 
 
 def pingPortal(portal):
-    # param = '-n' if os.sys.platform().lower()=='win32' else '-c'
-    param = '-c'
+    param = '-c' # Parameter needs to be -n for Windows os or -c for others
     hostname = portal['HOSTNAME']
     print(f"\n{divider}\nPortal: {portal['SYSTEM']} | {portal['PORTAL']}")
-    response = os.system(f'ping -c 1 {hostname}')
+    response = os.system(f'ping {param} 1 {hostname}')
     
     if response == 0:
         print(f"\nPortal {portal['SYSTEM']} | {portal['PORTAL']} is up!")
