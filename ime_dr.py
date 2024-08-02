@@ -4,6 +4,7 @@ import sys, os, datetime
 
 from csv import DictReader
 from time import sleep
+from ftplib import FTP
 
 
 sourceFile = 'portals_full_info.csv'
@@ -41,7 +42,10 @@ def drExercise():
             'PASSWORD': password,
             'DIRECTORY': directory
         }
+
         pingPortal(portal, param)
+        ftpPortal(portal)
+
     elif len(sys.argv) == 1:
         # Check for csv file in directory
         if not os.path.isfile(sourceFile):
@@ -50,8 +54,7 @@ def drExercise():
             print('Source CSV file found, loading...')
             sleep(0.5)
             portals = loadCsv(sourceFile) # Load portals from csv file
-            print(f"\nPortals loaded: {len(portals)}")
-            
+            print(f"\nPortals loaded: {len(portals)}")            
             for portal in portals: # Ping portals 1 by 1
                 param = '-c'
                 pingPortal(portal)
@@ -93,6 +96,19 @@ def pingPortal(portal, param):
         print(f"\nPortal {portal['SYSTEM']} | {portal['PORTAL']} is up!")
     else:
         print(f"\nPortal {portal['SYSTEM']} | {portal['PORTAL']} seems to be down. Please check!")
+
+def ftpPortal(portal):
+    try:
+        with FTP(portal['HOSTNAME'], portal['USERNAME'], portal['PASSWORD']) as ftp: 
+            print(ftp.getwelcome())           
+    except Exception as e:
+        print(f"\n{divider} Issue encountered, please see error: {divider}\n{divider} {e} {divider}")
+    else:
+        print('\nftp connection and login successful!')
+        # command = f'cd {portal['DIRECTORY']}'
+        # ftp.sendcmd(f'cd {portal['DIRECTORY']}')
+        pass
+        
 
 
 if __name__ == '__main__':
