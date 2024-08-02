@@ -7,26 +7,26 @@ from time import sleep
 from ftplib import FTP
 
 
-sourceFile = 'portals_full_info.csv'
-fields = ['SYSTEM', 'PORTAL', 'HOSTNAME', 'USERNAME', 'PASSWORD', 'DIRECTORY'] # Only these fields are to be brought over
-divider = "*-" * 20
+SOURCEFILE = 'portals_full_info.csv'
+FIELDS = ['SYSTEM', 'PORTAL', 'HOSTNAME', 'USERNAME', 'PASSWORD', 'DIRECTORY'] # Only these fields are to be brought over
+DIVIDER = "*-" * 20
 
 
 def drExercise():
     ''' Main function for DR exercise. Checks for csv file, loads into memory and pings/ftp checks portals. 
-    If test scenario, run python3 (ime_dr win or dr) (ip to check) (username) (password)'''
+    Submit 1 argument ('win' for a windows machine or 'dr' otherwise) for DR exercise
+    or 5 arguments ('win'/'dr, hostname, user, password, directory) for test scenario. '''
 
     timeStamp = datetime.datetime.now().strftime('%Y-%m-%d @ %X')
     print(f"\nDR exercise started on {timeStamp}")
     # In future, implement output to file.
     # destfile = f'DR_exercise_{timeStamp}'
 
-    # Implement test scenario with cmd arguments
     if len(sys.argv) == 6:
         print("\nThis is a test scenario with the following parameters:")
         print(sys.argv[1:])
 
-        if sys.argv[1].lower() == 'win':
+        if sys.argv[1].lower() == 'win': # Parameter needs to be -n for Windows os or -c for others
             param = '-n'
         else:
             param = '-c'
@@ -43,43 +43,45 @@ def drExercise():
             'DIRECTORY': directory
         }
 
+        # Test ping and ftp with test portal passed as argument
         pingPortal(portal, param)
         ftpPortal(portal)
 
-    elif len(sys.argv) == 1:
+    elif len(sys.argv) == 2:
         # Check for csv file in directory
-        if not os.path.isfile(sourceFile):
+        if sys.argv[1].lower() == 'win':
+            param = '-n'
+        else:
+            param = '-c'
+        if not os.path.isfile(SOURCEFILE):
             print('Source CSV file not found. Please save file "portals_full_info.csv" in this directory and retry.')
         else:
             print('Source CSV file found, loading...')
             sleep(0.5)
-            portals = loadCsv(sourceFile) # Load portals from csv file
+            portals = loadCsv(SOURCEFILE) # Load portals from csv file
             print(f"\nPortals loaded: {len(portals)}")            
-            for portal in portals: # Ping portals 1 by 1
-                param = '-c'
-                pingPortal(portal)
-                pass # Implement ftp connection check
+            for portal in portals: # One by one, ping and try FTP connection with the portals
+                pingPortal(portal, param)
+                ftpPortal(portal)
     else:
-        print("Please submit 0 arguments for DR exercise or 5 arguments for test scenario")
+        print("Please submit 1 argument ('win' for a windows machine or 'dr' otherwise) for DR exercise or 5 arguments ('win'/'dr, hostname, user, password, directory) for test scenario.")
     
     timeStamp = datetime.datetime.now().strftime('%Y-%m-%d @ %X')
-    print(f"\n{divider}\nDR Exercise finished on {timeStamp}.\n")
+    print(f"\n{DIVIDER}\nDR Exercise finished on {timeStamp}.\n")
 
 
-def loadCsv(sourceFile):
+def loadCsv(SOURCEFILE):
     ''' Function that loads portal details from portals_full_info.csv file. '''
     portals = []
-    with open(sourceFile, newline='') as csvfile:
+    with open(SOURCEFILE, newline='') as csvfile:
         reader = DictReader(csvfile, delimiter=';')
-        # fields = ['SYSTEM', 'PORTAL', 'HOSTNAME', 'USERNAME', 'PASSWORD', 'DIRECTORY'] # Only these fields are to be brought over
         counter = 0
         for row in reader:
             if row['STATUS'] == 'A' and row['ROUTE STATUS'] =='Enabled' and row['HOSTNAME']: # Check for active portals with a hostname.
                 counter += 1
                 portal = {}
-                for field in fields:
+                for field in FIELDS:
                     portal[field] = row[field]
-                    print(portal)
                 portals.append(portal)
                 print("\rPortals imported: {}". format(counter), end='')
                 sleep(.025)
@@ -87,9 +89,8 @@ def loadCsv(sourceFile):
 
 
 def pingPortal(portal, param):
-    # param = '-c'  # Parameter needs to be -n for Windows os or -c for others
     hostname = portal['HOSTNAME']
-    print(f"\n{divider}\nPortal: {portal['SYSTEM']} | {portal['PORTAL']}")
+    print(f"\n{DIVIDER}\nPortal: {portal['SYSTEM']} | {portal['PORTAL']}")
     response = os.system(f'ping {param} 1 {hostname}')
     
     if response == 0:
@@ -102,11 +103,10 @@ def ftpPortal(portal):
         with FTP(portal['HOSTNAME'], portal['USERNAME'], portal['PASSWORD']) as ftp: 
             print(ftp.getwelcome())           
     except Exception as e:
-        print(f"\n{divider} Issue encountered, please see error: {divider}\n{divider} {e} {divider}")
+        print(f"\n{DIVIDER} Issue encountered, please see error: {DIVIDER}\n{DIVIDER} {e} {DIVIDER}")
     else:
         print('\nftp connection and login successful!')
-        # command = f'cd {portal['DIRECTORY']}'
-        # ftp.sendcmd(f'cd {portal['DIRECTORY']}')
+        # Implement cd into target directory
         pass
         
 
