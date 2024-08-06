@@ -19,7 +19,7 @@ def drExercise():
     or 5 arguments ('win'/'dr, hostname, user, password, directory) for test scenario. '''
 
     timeStamp = datetime.datetime.now()
-    outputFile = f'DR_exercise_{timeStamp.strftime('%Y-%m-%d %H%M%S')}.txt'
+    outputFile = f'DR_exercise_{timeStamp.strftime("%Y-%m-%d_%H%M%S")}.txt'
     open(outputFile, 'w').close()
     stdout = sys.stdout
     print(f"\nDR exercise started on {timeStamp.strftime('%Y-%m-%d @ %X')}")
