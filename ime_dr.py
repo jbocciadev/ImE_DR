@@ -17,8 +17,11 @@ def drExercise():
     Submit 1 argument ('win' for a windows machine or 'dr' otherwise) for DR exercise
     or 5 arguments ('win'/'dr, hostname, user, password, directory) for test scenario. '''
 
-    timeStamp = datetime.datetime.now().strftime('%Y-%m-%d @ %X')
-    print(f"\nDR exercise started on {timeStamp}")
+    timeStamp = datetime.datetime.now()
+    outputFile = f'DR_exercise_{timeStamp.strftime('%Y-%m-%d %H%M%S')}.txt'
+    open(outputFile, 'w').close()
+    stdout = sys.stdout
+    print(f"\nDR exercise started on {timeStamp.strftime('%Y-%m-%d @ %X')}")
     # In future, implement output to file.
     # destfile = f'DR_exercise_{timeStamp}'
 
@@ -43,9 +46,13 @@ def drExercise():
             'DIRECTORY': directory
         }
 
-        # Test ping and ftp with test portal passed as argument
-        pingPortal(portal, param)
-        ftpPortal(portal)
+        with open(outputFile, 'a') as sys.stdout:
+            # Test ping and ftp with test portal passed as argument
+            pingPortal(portal, param)
+            ftpPortal(portal)
+            timeStamp = datetime.datetime.now().strftime('%Y-%m-%d @ %X')
+            print(f"\n{DIVIDER}\nDR Exercise finished on {timeStamp}\n")
+        sys.stdout = stdout
 
     elif len(sys.argv) == 2:
         # Check for csv file in directory
@@ -60,14 +67,23 @@ def drExercise():
             sleep(0.5)
             portals = loadCsv(SOURCEFILE) # Load portals from csv file
             print(f"\nPortals loaded: {len(portals)}")            
-            for portal in portals: # One by one, ping and try FTP connection with the portals
-                pingPortal(portal, param)
-                ftpPortal(portal)
+            with open(outputFile, 'a') as sys.stdout:
+                print(f"\nDR exercise started on {timeStamp.strftime('%Y-%m-%d @ %X')}")
+                print(f"\nPortals loaded: {len(portals)}")
+                
+                for i, portal in enumerate(portals): # One by one, ping and try FTP connection with the portals
+                    print(f"\n{DIVIDER}\nPortal {i+1} of {len(portals)}")
+                    print(f"\nPortal: {portal['SYSTEM']} | {portal['PORTAL']}")                
+                    pingPortal(portal, param, i, tot=len(portals))
+                    ftpPortal(portal)
+                timeStamp = datetime.datetime.now().strftime('%Y-%m-%d @ %X')
+                print(f"\n{DIVIDER}\nDR Exercise finished on {timeStamp}\n")
+            sys.stdout = stdout
     else:
         print("Please submit 1 argument ('win' for a windows machine or 'dr' otherwise) for DR exercise or 5 arguments ('win'/'dr, hostname, user, password, directory) for test scenario.")
     
     timeStamp = datetime.datetime.now().strftime('%Y-%m-%d @ %X')
-    print(f"\n{DIVIDER}\nDR Exercise finished on {timeStamp}.\n")
+    print(f"\n{DIVIDER}\nDR Exercise finished on {timeStamp}\n")
 
 
 def loadCsv(SOURCEFILE):
@@ -88,9 +104,12 @@ def loadCsv(SOURCEFILE):
     return portals
 
 
-def pingPortal(portal, param):
+def pingPortal(portal, param, i=None, tot=None):
+    if i:
+        os.system(f'echo: ')
+        os.system(f'echo Portal {i+1} of {tot} ({i/tot:.1%})')
+
     hostname = portal['HOSTNAME']
-    print(f"\n{DIVIDER}\nPortal: {portal['SYSTEM']} | {portal['PORTAL']}")
     response = os.system(f'ping {param} 1 {hostname}')
     
     if response == 0:
@@ -103,12 +122,12 @@ def ftpPortal(portal):
         with FTP(portal['HOSTNAME'], portal['USERNAME'], portal['PASSWORD']) as ftp: 
             print(ftp.getwelcome())           
     except Exception as e:
-        print(f"\n{DIVIDER} Issue encountered, please see error: {DIVIDER}\n{DIVIDER} {e} {DIVIDER}")
+        print(f"\nIssue encountered, please see error:\n{e}")
+        print('ftp connection failed')
     else:
         print('\nftp connection and login successful!')
         # Implement cd into target directory
         pass
-        
 
 
 if __name__ == '__main__':
