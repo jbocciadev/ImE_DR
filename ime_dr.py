@@ -1,4 +1,5 @@
 ''' Python script to check FTP connections are up for all active portals in ImE, for DR exercise '''
+''' Written by Juan Boccia - 06/08/2024 '''
 
 import sys, os, datetime
 
@@ -22,8 +23,6 @@ def drExercise():
     open(outputFile, 'w').close()
     stdout = sys.stdout
     print(f"\nDR exercise started on {timeStamp.strftime('%Y-%m-%d @ %X')}")
-    # In future, implement output to file.
-    # destfile = f'DR_exercise_{timeStamp}'
 
     if len(sys.argv) == 6:
         print("\nThis is a test scenario with the following parameters:")
